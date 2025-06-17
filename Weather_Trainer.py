@@ -7,12 +7,28 @@ import pandas as pd
 import numpy as np
 
 # Load your dataset
-# Your CSV should have columns like: temp_max, temp_min, humidity, wind_speed, day_of_year
-df = pd.read_csv("weather_data.csv")
+# Your CSV should have columns like: temp_max, temp_min, precip, wind_speed, day_of_year
+city_name = 'Columbus_Ohio'
+df = pd.read_csv(city_name + "_weather_with_day_of_year.csv")
+#df = pd.read_csv(city_name + "_50_years_weather.csv")
+#df = df.dropna()
+#print(torch.isnan(X_train_tensor).any(), torch.isnan(y_train_tensor).any())
+print(len(df))
 
 # Features and target
-X = df[["temp_max", "temp_min", "humidity", "wind_speed"]].values
-y = df["day_of_year"].values
+#weather_keys = ["precip", "temp_max", "temp_min", "wind_speed"]
+#weather_keys =["PRCP","TMAX","TMIN","AWND"]
+#Expanded keys
+#weather_keys =[ "TMAX", "TMIN", "PRCP", "AWND", "SNOW", "WSF2","seconds" ] #,"PSUN" not avialable and peak gust time needed converted to seconds to be usable
+weather_keys =[ "TMAX", "TMIN", "PRCP", "SNOW", "seconds" ] #,"PSUN" not avialable and peak gust time needed converted to seconds to be usable
+input_dim_size = len(weather_keys)
+
+#Only drop dates that actually are missing data I care about
+Restricted_weather = df[weather_keys + ['date']]
+Restricted_weather = Restricted_weather.dropna()
+X = Restricted_weather[weather_keys].values
+y = Restricted_weather["date"].values
+print(len(Restricted_weather))
 
 # Normalize features
 scaler = StandardScaler()
@@ -26,28 +42,52 @@ X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
 y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
 y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
 
+
 # Define the model
 class WeatherNet(nn.Module):
     def __init__(self):
         super(WeatherNet, self).__init__()
+#        self.net = nn.Sequential(
+#            nn.Linear(4, 64),
+#            nn.ReLU(),
+#            nn.Linear(64, 32),
+#            nn.ReLU(),
+#            nn.Linear(32, 1)  # Regression output
+#        )
         self.net = nn.Sequential(
-            nn.Linear(4, 32),
+            nn.Linear(input_dim_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
             nn.ReLU(),
             nn.Linear(32, 16),
             nn.ReLU(),
-            nn.Linear(16, 1)  # Regression output
+            nn.Linear(16, 8), 
+            nn.ReLU(),
+            nn.Linear(8, 4),
+            nn.ReLU(),
+            nn.Linear(4, 1)  # Regression output
         )
+#        self.net = nn.Sequential(
+#            nn.Linear(4, 3),
+#            nn.ReLU(),
+#            nn.Linear(3, 2),
+#            nn.ReLU(),
+#            nn.Linear(2, 1)  # Regression output
+#        )
 
     def forward(self, x):
         return self.net(x)
 
 # Initialize model, loss, optimizer
 model = WeatherNet()
+
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+#criterion = nn.L1Loss()
+
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
 # Training loop
-epochs = 100
+epochs = 10000
 for epoch in range(epochs):
     model.train()
     outputs = model(X_train_tensor)
@@ -57,7 +97,7 @@ for epoch in range(epochs):
     loss.backward()
     optimizer.step()
 
-    if (epoch+1) % 10 == 0:
+    if (epoch+1) % 100 == 0:
         with torch.no_grad():
             val_loss = criterion(model(X_test_tensor), y_test_tensor)
         print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}, Val Loss: {val_loss.item():.4f}")
