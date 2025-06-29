@@ -19,8 +19,8 @@ print(len(df))
 #weather_keys = ["precip", "temp_max", "temp_min", "wind_speed"]
 #weather_keys =["PRCP","TMAX","TMIN","AWND"]
 #Expanded keys
-#weather_keys =[ "TMAX", "TMIN", "PRCP", "AWND", "SNOW", "WSF2","seconds" ] #,"PSUN" not avialable and peak gust time needed converted to seconds to be usable
-weather_keys =[ "TMAX", "TMIN", "PRCP", "SNOW", "seconds" ] #,"PSUN" not avialable and peak gust time needed converted to seconds to be usable
+weather_keys =[ "TMAX", "TMIN", "PRCP", "AWND", "SNOW", "WSF2","seconds" ] #,"PSUN" not avialable and peak gust time needed converted to seconds to be usable
+#weather_keys =[ "TMAX", "TMIN", "PRCP", "SNOW", "seconds" ] #,"PSUN" not avialable and peak gust time needed converted to seconds to be usable
 input_dim_size = len(weather_keys)
 
 #Only drop dates that actually are missing data I care about
