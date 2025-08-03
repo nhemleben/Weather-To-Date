@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def hhmm_to_seconds(hhmm):
     hours = hhmm // 100
@@ -8,7 +9,8 @@ def hhmm_to_seconds(hhmm):
 # Settings
 city_name = "Columbus_Ohio"
 input_file = city_name + "_50_years_weather.csv"        # Replace with your filename
-output_file = city_name+"_weather_with_day_of_year.csv"
+#output_file = city_name+"_weather_with_day_of_year.csv"
+output_file = city_name+"_weather_with_angle_encoding_of_year.csv"
 date_column = "date"                # Replace with your actual column name
 
 # Load CSV
@@ -17,6 +19,10 @@ df = pd.read_csv(input_file)
 # Convert to datetime and extract day-of-year
 #df[date_column] = pd.to_datetime(df[date_column])
 #df["day_of_year"] = df[date_column].dt.dayofyear
+
+#366 to compensate for leap days
+df["day_angle_cos"] = np.cos( (2*np.pi) * df['date'] / 366 ) 
+df["day_angle_sin"] = np.sin( (2*np.pi) * df['date'] / 366 )
 
 time_col = 'PGTM'
 df["seconds"] = hhmm_to_seconds( df[time_col] )
